@@ -75,6 +75,7 @@ class Category(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=255)
+    image = models.CharField(max_length=255)
     description = models.TextField()
     instructor = models.CharField(max_length=255)
     goals = models.TextField()

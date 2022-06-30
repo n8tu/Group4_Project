@@ -21,8 +21,10 @@ urlpatterns = [
     path('',views.index),
     path('register',views.register),
     path('login',views.login),
-    path('success',views.success),
+    path('home',views.home),
     path('logout',views.logout),
+    path('show/<course_id>',views.show_course),
+    path('show/subject/<subject_id>',views.show_subject),
 
 
 

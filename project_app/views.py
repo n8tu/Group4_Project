@@ -5,7 +5,7 @@ from django.contrib import messages
 
 
 def index(request):
-    return render(request,'login_and_registertion.html')
+    return render(request,'login_register/login_and_registertion.html')
 
 def register(request):
     if request.method == 'POST':
@@ -27,7 +27,7 @@ def register(request):
             messages.success(request,"User successfully added!")
 
             request.session['user_id'] = user.id
-            return redirect('/success')
+            return redirect('/home')
     return redirect('/')
 
 def login(request):
@@ -41,19 +41,37 @@ def login(request):
             userid = User.objects.get(email__iexact=request.POST['email'])
             request.session['user_id'] = userid.id
             if userid.is_admin:
-                return redirect('/dashboard')
+                return redirect('/home')
             else:
-                return redirect('/success')
+                return redirect('/home')
 
     return redirect('/') 
 
-def success(request):
+def home(request):
     if 'user_id' not in request.session:
         return redirect('/')
     context = {
-        'user': User.objects.get(id=request.session['user_id'])
+        'user': User.objects.get(id=request.session['user_id']),
+        'categories':Category.objects.all(),
+        'courses':Course.objects.all(),
     }
-    return render(request,'success.html',context)
+    return render(request,'frontend/home.html',context)
+
+def show_course(request,course_id):
+    context = {
+        'user': User.objects.get(id=request.session['user_id']),
+        'categories':Category.objects.all(),
+        'course':Course.objects.get(id=course_id)
+    }
+    return render(request,'frontend/show_course.html',context)
+
+def show_subject(request,subject_id):
+    context = {
+        'user': User.objects.get(id=request.session['user_id']),
+        'categories':Category.objects.all(),
+        'subject':Subject.objects.get(id=subject_id)
+    }
+    return render(request,'frontend/show_subject.html',context)
 
 def logout(request):
     del request.session['user_id']
@@ -64,9 +82,9 @@ def dashboard(request):
         return redirect('/')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
-    return render(request, 'dashboard.html')
+    return render(request, 'dashboard/dashboard.html')
 
 
 # Categories functions #
@@ -76,11 +94,11 @@ def all_categories(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
     context = {
         'categories': Category.objects.all()
     }
-    return render(request, 'category/all_categories.html', context)
+    return render(request, 'dashboard/category/all_categories.html', context)
 
 
 def new_category(request):
@@ -88,9 +106,9 @@ def new_category(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
-    return render(request, 'category/new_category.html')
+    return render(request, 'dashboard/category/new_category.html')
 
 
 def create_category(request):
@@ -114,13 +132,13 @@ def edit_category(request, category_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'category': Category.objects.get(id=category_id)
     }
 
-    return render(request, 'category/edit_category.html',context)
+    return render(request, 'dashboard/category/edit_category.html',context)
 
 
 def update_category(request, category_id):
@@ -128,7 +146,7 @@ def update_category(request, category_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     category = Category.objects.get(id=category_id)
     category.name=request.POST['name']
@@ -142,7 +160,7 @@ def delete_category(request, category_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
     _category= Category.objects.get(id=category_id)
     _category.delete()
 
@@ -158,12 +176,12 @@ def all_courses(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'courses':Course.objects.all()
     }
-    return render(request, 'course/all_courses.html',context)
+    return render(request, 'dashboard/course/all_courses.html',context)
 
 
 def new_course(request):
@@ -171,12 +189,12 @@ def new_course(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'categories':Category.objects.all()
     }
-    return render(request, 'course/new_course.html' ,context)
+    return render(request, 'dashboard/course/new_course.html' ,context)
 
 
 def create_course(request):
@@ -184,12 +202,13 @@ def create_course(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     if request.method == 'POST':
         _user = User.objects.get(id=request.session['user_id'])
         course = Course.objects.create(
             name=request.POST['name'],
+            image=request.POST['image'],
             description=request.POST['description'],
             instructor=request.POST['instructor'],
             goals=request.POST['goals'],
@@ -209,13 +228,13 @@ def edit_course(request, course_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'course':Course.objects.get(id=course_id)
     }
 
-    return render(request,'course/edit_course.html',context)
+    return render(request,'dashboard/course/edit_course.html',context)
 
 
 def update_course(request, course_id):
@@ -223,11 +242,12 @@ def update_course(request, course_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     if request.method=="POST":
         _course=Course.objects.get(id=course_id)
         _course.name=request.POST['name']
+        _course.image=request.POST['image']
         _course.description=request.POST['description']
         _course.instructor=request.POST['instructor']
         _course.goals=request.POST['goals']
@@ -240,7 +260,7 @@ def delete_course(request, course_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     _course = Course.objects.get(id=course_id)
     _course.delete()
@@ -256,12 +276,12 @@ def all_sections(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'sections':Section.objects.all()
     }
-    return render(request, 'section/all_sections.html',context)
+    return render(request, 'dashboard/section/all_sections.html',context)
 
 
 def new_section(request):
@@ -269,12 +289,12 @@ def new_section(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
         
     context = {
         'courses':Course.objects.all()
     }
-    return render(request, 'section/new_section.html',context)
+    return render(request, 'dashboard/section/new_section.html',context)
 
 
 def create_section(request):
@@ -282,7 +302,7 @@ def create_section(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     if request.method == 'POST':
         _user = User.objects.get(id=request.session['user_id'])
@@ -301,12 +321,12 @@ def edit_section(request, section_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'section':Section.objects.get(id=section_id)
     } 
-    return render(request,'section/edit_section.html',context)
+    return render(request,'dashboard/section/edit_section.html',context)
 
 
 def update_section(request, section_id):
@@ -314,7 +334,7 @@ def update_section(request, section_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
     
     if request.method == 'POST':
         section = Section.objects.get(id=section_id)
@@ -329,7 +349,7 @@ def delete_section(request, section_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     section = Section.objects.get(id=section_id)
     section.delete()
@@ -345,12 +365,12 @@ def all_subjects(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'subjects':Subject.objects.all()
     }
-    return render(request, 'subject/all_subjects.html',context)
+    return render(request, 'dashboard/subject/all_subjects.html',context)
 
 
 def new_subject(request):
@@ -358,12 +378,12 @@ def new_subject(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'sections':Section.objects.all()
     }
-    return render(request, 'subject/new_subject.html',context)
+    return render(request, 'dashboard/subject/new_subject.html',context)
 
 
 def create_subject(request):
@@ -371,7 +391,7 @@ def create_subject(request):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     if request.method=='POST':
         user = User.objects.get(id=request.session['user_id'])
@@ -391,12 +411,12 @@ def edit_subject(request, subject_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     context = {
         'subject':Subject.objects.get(id=subject_id)
     }
-    return render(request,'subject/edit_subject.html',context)
+    return render(request,'dashboard/subject/edit_subject.html',context)
 
 
 def update_subject(request, subject_id):
@@ -404,11 +424,11 @@ def update_subject(request, subject_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     if request.method=="POST":
         subject = Subject.objects.get(id=subject_id)
-        subject.title=request.POST['title'],
+        subject.title=request.POST['title']
         subject.description=request.POST['description']
         subject.video_url=request.POST['video_url']
         subject.save()
@@ -419,7 +439,7 @@ def delete_subject(request, subject_id):
         return redirect('/dashboard')
     _user = User.objects.get(id=request.session['user_id'])
     if not _user.is_admin:
-        return redirect('/success')
+        return redirect('/home')
 
     subject = Subject.objects.get(id=subject_id)
     subject.delete()
